@@ -1,0 +1,11 @@
+@model string?
+
+@if (!string.IsNullOrEmpty(Model))
+{
+    @Model
+}
+else if (User.Identity?.IsAuthenticated == true)
+{
+    @User.Identity.Name
+}
+

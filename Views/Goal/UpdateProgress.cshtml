@@ -1,0 +1,33 @@
+@model HealthFitness.DTOs.GoalDto
+@{
+    ViewData["Title"] = "Update Goal Progress";
+}
+
+<h2>Update Goal Progress</h2>
+<hr />
+
+<div class="mb-3">
+    <strong>Goal Type:</strong> @Model.GoalType<br />
+    <strong>Target Value:</strong> @Model.TargetValue<br />
+    <strong>Current Value:</strong> @Model.CurrentValue<br />
+    <strong>Deadline:</strong> @Model.Deadline.ToString("MM/dd/yyyy")
+</div>
+
+<form asp-action="UpdateProgress" method="post">
+    <input type="hidden" asp-for="Id" />
+    
+    <div class="mb-3">
+        <label for="currentValue" class="form-label">New Current Value</label>
+        <input name="currentValue" id="currentValue" class="form-control" type="number" step="0.01" value="@Model.CurrentValue" required />
+    </div>
+    
+    <div class="mb-3">
+        <button type="submit" class="btn btn-primary">Update Progress</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

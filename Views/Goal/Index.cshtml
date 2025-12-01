@@ -1,0 +1,221 @@
+@model List<HealthFitness.DTOs.GoalDto>
+@{
+    ViewData["Title"] = "Goals";
+}
+
+@functions {
+    decimal CalculateGoalProgress(decimal targetValue, decimal currentValue, decimal? initialValue)
+    {
+        if (targetValue <= 0) return 0;
+
+        if (targetValue > currentValue)
+        {
+            // Increase goal (e.g., gain weight, run more distance, increase strength)
+            return Math.Min((currentValue / targetValue) * 100, 100);
+        }
+        else if (targetValue < currentValue)
+        {
+            // Decrease goal (e.g., lose weight, reduce body fat)
+            // Use initial value if available, otherwise use current as starting point
+            var startingValue = initialValue ?? currentValue;
+            
+            if (startingValue <= targetValue)
+            {
+                return 100;
+            }
+            
+            // Calculate progress: how much we've moved from starting toward target
+            var totalDistance = startingValue - targetValue;
+            var distanceCovered = startingValue - currentValue;
+            
+            if (totalDistance <= 0) return 100;
+            
+            var progress = (distanceCovered / totalDistance) * 100;
+            return Math.Max(0, Math.Min(progress, 100));
+        }
+        else
+        {
+            // Current equals target - goal completed
+            return 100;
+        }
+    }
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Your Goals</h2>
+        <p class="text-muted mb-0">Set targets and track your progress</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Create New Goal
+    </a>
+</div>
+
+@if (Model.Any())
+{
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-2">
+                                <h6 class="text-muted small mb-1">Total Goals</h6>
+                                <h4 class="fw-bold mb-0 text-primary">@Model.Count</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2">
+                                <h6 class="text-muted small mb-1">Completed</h6>
+                                <h4 class="fw-bold mb-0 text-success">@Model.Count(g => g.Status == "Completed")</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2">
+                                <h6 class="text-muted small mb-1">In Progress</h6>
+                                <h4 class="fw-bold mb-0 text-info">@Model.Count(g => g.Status == "In Progress")</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2">
+                                <h6 class="text-muted small mb-1">Average Progress</h6>
+                                <h4 class="fw-bold mb-0 text-warning">
+                                    @{
+                                        var avgProgress = Model.Where(g => g.TargetValue > 0)
+                                            .Select(g => CalculateGoalProgress(g.TargetValue, g.CurrentValue, g.InitialValue))
+                                            .DefaultIfEmpty(0)
+                                            .Average();
+                                    }
+                                    @avgProgress.ToString("F1")%
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var goal in Model.OrderByDescending(g => g.Deadline))
+        {
+            var progressPercentage = CalculateGoalProgress(goal.TargetValue, goal.CurrentValue, goal.InitialValue);
+            var remaining = goal.TargetValue - goal.CurrentValue;
+            var daysRemaining = (goal.Deadline - DateTime.Today).Days;
+            var statusClass = goal.Status switch
+            {
+                "Completed" => "success",
+                "Failed" => "danger",
+                _ => "info"
+            };
+            var statusIcon = goal.Status switch
+            {
+                "Completed" => "check-circle-fill",
+                "Failed" => "x-circle-fill",
+                _ => "arrow-repeat"
+            };
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-@statusClass text-white border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold mb-0">
+                                <i class="bi bi-@statusIcon me-2"></i>@goal.GoalType
+                            </h6>
+                            <span class="badge bg-light text-dark">@goal.Status</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Progress</span>
+                                <span class="fw-bold">@Math.Min(progressPercentage, 100).ToString("F1")%</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-@statusClass" role="progressbar" 
+                                     style="width: @(Math.Min(progressPercentage, 100))%" 
+                                     aria-valuenow="@progressPercentage" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-2 mb-3 small">
+                            <div class="col-6">
+                                <div class="text-muted">Target</div>
+                                <div class="fw-bold">@goal.TargetValue</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted">Current</div>
+                                <div class="fw-bold">@goal.CurrentValue</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted">Remaining</div>
+                                <div class="fw-bold @(remaining < 0 ? "text-danger" : "")">@(remaining >= 0 ? remaining.ToString("F1") : "Exceeded")</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted">Days Left</div>
+                                <div class="fw-bold @(daysRemaining < 0 ? "text-danger" : daysRemaining < 7 ? "text-warning" : "")">
+                                    @(daysRemaining >= 0 ? daysRemaining.ToString() : "Overdue")
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="text-muted">Deadline</div>
+                                <div class="fw-semibold">@goal.Deadline.ToString("MMM dd, yyyy")</div>
+                            </div>
+                        </div>
+                        
+                        <div class="border-top pt-3">
+                            <div class="d-grid gap-2">
+                                <a asp-action="UpdateProgress" asp-route-id="@goal.Id" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-arrow-up-circle me-1"></i>Update Progress
+                                </a>
+                                <div class="btn-group" role="group">
+                                    <a asp-action="Edit" asp-route-id="@goal.Id" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-pencil me-1"></i>Edit
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@goal.Id" method="post" class="d-inline flex-grow-1">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Are you sure you want to delete this goal?')">
+                                            <i class="bi bi-trash me-1"></i>Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-bullseye text-muted" style="font-size: 4rem;"></i>
+            <h5 class="mt-3 mb-2">No Goals Created Yet</h5>
+            <p class="text-muted mb-4">Set your first goal and start tracking your progress towards a healthier you.</p>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Create Your First Goal
+            </a>
+        </div>
+    </div>
+}
+

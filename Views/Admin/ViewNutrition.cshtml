@@ -1,0 +1,155 @@
+@model List<HealthFitness.DTOs.NutritionDto>
+@{
+    ViewData["Title"] = "View Nutrition";
+    var groupedNutrition = Model.OrderByDescending(n => n.Time).GroupBy(n => DateTime.Today);
+    var mealTypes = new[] { "Breakfast", "Lunch", "Dinner", "Snack" };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">All Nutrition Logs</h2>
+        <p class="text-muted mb-0">View nutrition logs from all users</p>
+    </div>
+    <div>
+        <form method="get" class="d-inline">
+            <select name="userId" class="form-select d-inline-block" style="width: auto;" onchange="this.form.submit()">
+                <option value="">All Users</option>
+                @foreach (var user in ViewBag.Users)
+                {
+                    <option value="@user.Id" selected="@(ViewBag.UserId == user.Id)">@user.Name</option>
+                }
+            </select>
+        </form>
+    </div>
+</div>
+
+@if (Model.Any())
+{
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-2">
+                                <h6 class="text-muted small mb-1">Total Meals</h6>
+                                <h4 class="fw-bold mb-0 text-primary">@Model.Count</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2">
+                                <h6 class="text-muted small mb-1">Total Calories</h6>
+                                <h4 class="fw-bold mb-0 text-success">@Model.Sum(n => n.Calories).ToString("F0")</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2">
+                                <h6 class="text-muted small mb-1">Days Tracked</h6>
+                                <h4 class="fw-bold mb-0 text-info">@groupedNutrition.Count()</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2">
+                                <h6 class="text-muted small mb-1">Unique Users</h6>
+                                <h4 class="fw-bold mb-0 text-warning">@Model.Select(n => n.UserName).Distinct().Count()</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @foreach (var group in groupedNutrition)
+    {
+        var dailyCalories = group.Sum(n => n.Calories);
+        var mealsByType = group.GroupBy(n => n.MealType);
+        
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light border-0 py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-clock me-2 text-success"></i>
+                            All Meals
+                        </h5>
+                        <small class="text-muted">
+                            @group.Count() @(group.Count() == 1 ? "meal" : "meals") logged
+                        </small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-success fs-6">@dailyCalories.ToString("F0") calories</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    @foreach (var mealType in mealTypes)
+                    {
+                        var meals = group.Where(n => n.MealType == mealType).ToList();
+                        if (meals.Any())
+                        {
+                            var mealTypeCalories = meals.Sum(m => m.Calories);
+                            var mealTypeIcon = mealType switch
+                            {
+                                "Breakfast" => "sunrise",
+                                "Lunch" => "sun",
+                                "Dinner" => "moon",
+                                _ => "cup"
+                            };
+                            
+                            <div class="col-md-6 col-lg-3">
+                                <div class="card border h-100">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="fw-bold mb-0">
+                                                <i class="bi bi-@mealTypeIcon me-1 text-warning"></i>@mealType
+                                            </h6>
+                                            <span class="badge bg-warning text-dark">@mealTypeCalories.ToString("F0")</span>
+                                        </div>
+                                        <ul class="list-unstyled mb-0 small">
+                                            @foreach (var meal in meals)
+                                            {
+                                                <li class="mb-2 pb-2 border-bottom">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <div class="flex-grow-1">
+                                                            <div class="fw-semibold">@meal.FoodName</div>
+                                                            <div class="text-muted">
+                                                                <i class="bi bi-clock me-1"></i>@meal.Time.ToString(@"hh\:mm")
+                                                                • @meal.Calories.ToString("F0") cal
+                                                                @if (meal.Protein.HasValue || meal.Carbs.HasValue || meal.Fat.HasValue)
+                                                                {
+                                                                    <span class="ms-2">
+                                                                        @if (meal.Protein.HasValue) { <text>P: @meal.Protein.Value.ToString("F1")g</text> }
+                                                                        @if (meal.Carbs.HasValue) { <text>C: @meal.Carbs.Value.ToString("F1")g</text> }
+                                                                        @if (meal.Fat.HasValue) { <text>F: @meal.Fat.Value.ToString("F1")g</text> }
+                                                                    </span>
+                                                                }
+                                                                • @meal.UserName
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-egg-fried text-muted" style="font-size: 4rem;"></i>
+            <h5 class="mt-3 mb-2">No Nutrition Logs Found</h5>
+            <p class="text-muted mb-0">No meals have been logged yet.</p>
+        </div>
+    </div>
+}
+

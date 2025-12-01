@@ -1,0 +1,151 @@
+@model List<HealthFitness.DTOs.GoalDto>
+@{
+    ViewData["Title"] = "View Goals";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">All Goals</h2>
+        <p class="text-muted mb-0">View goals from all users</p>
+    </div>
+    <div>
+        <form method="get" class="d-inline">
+            <select name="userId" class="form-select d-inline-block" style="width: auto;" onchange="this.form.submit()">
+                <option value="">All Users</option>
+                @foreach (var user in ViewBag.Users)
+                {
+                    <option value="@user.Id" selected="@(ViewBag.UserId == user.Id)">@user.Name</option>
+                }
+            </select>
+        </form>
+    </div>
+</div>
+
+@if (Model.Any())
+{
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-2">
+                                <h6 class="text-muted small mb-1">Total Goals</h6>
+                                <h4 class="fw-bold mb-0 text-primary">@Model.Count</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2">
+                                <h6 class="text-muted small mb-1">Completed</h6>
+                                <h4 class="fw-bold mb-0 text-success">@Model.Count(g => g.Status == "Completed")</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2">
+                                <h6 class="text-muted small mb-1">In Progress</h6>
+                                <h4 class="fw-bold mb-0 text-info">@Model.Count(g => g.Status == "In Progress")</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2">
+                                <h6 class="text-muted small mb-1">Unique Users</h6>
+                                <h4 class="fw-bold mb-0 text-warning">@Model.Select(g => g.UserName).Distinct().Count()</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var goal in Model.OrderByDescending(g => g.Deadline))
+        {
+            var progressPercentage = goal.TargetValue > 0 ? (goal.CurrentValue / goal.TargetValue) * 100 : 0;
+            var remaining = goal.TargetValue - goal.CurrentValue;
+            var daysRemaining = (goal.Deadline - DateTime.Today).Days;
+            var statusClass = goal.Status switch
+            {
+                "Completed" => "success",
+                "Failed" => "danger",
+                _ => "info"
+            };
+            var statusIcon = goal.Status switch
+            {
+                "Completed" => "check-circle-fill",
+                "Failed" => "x-circle-fill",
+                _ => "arrow-repeat"
+            };
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-@statusClass text-white border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold mb-0">
+                                <i class="bi bi-@statusIcon me-2"></i>@goal.GoalType
+                            </h6>
+                            <span class="badge bg-light text-dark">@goal.Status</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="bi bi-person me-1"></i>@goal.UserName
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Progress</span>
+                                <span class="fw-bold">@Math.Min(progressPercentage, 100).ToString("F1")%</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-@statusClass" role="progressbar" 
+                                     style="width: @(Math.Min(progressPercentage, 100))%" 
+                                     aria-valuenow="@progressPercentage" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-2 mb-3 small">
+                            <div class="col-6">
+                                <div class="text-muted">Target</div>
+                                <div class="fw-bold">@goal.TargetValue</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted">Current</div>
+                                <div class="fw-bold">@goal.CurrentValue</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted">Remaining</div>
+                                <div class="fw-bold @(remaining < 0 ? "text-danger" : "")">@(remaining >= 0 ? remaining.ToString("F1") : "Exceeded")</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted">Days Left</div>
+                                <div class="fw-bold @(daysRemaining < 0 ? "text-danger" : daysRemaining < 7 ? "text-warning" : "")">
+                                    @(daysRemaining >= 0 ? daysRemaining.ToString() : "Overdue")
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="text-muted">Deadline</div>
+                                <div class="fw-semibold">@goal.Deadline.ToString("MMM dd, yyyy")</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-bullseye text-muted" style="font-size: 4rem;"></i>
+            <h5 class="mt-3 mb-2">No Goals Found</h5>
+            <p class="text-muted mb-0">No goals have been created yet.</p>
+        </div>
+    </div>
+}
+

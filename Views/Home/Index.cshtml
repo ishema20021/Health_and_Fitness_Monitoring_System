@@ -1,0 +1,114 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<style>
+    .home-hero {
+        background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.92) 100%),
+            linear-gradient(135deg, rgba(40, 167, 69, 0.3) 0%, rgba(25, 135, 84, 0.25) 100%),
+            url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1600&q=70') center/cover no-repeat;
+        border-radius: 1.5rem;
+        padding: 3rem 1rem;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.08);
+    }
+
+    .hero-icon {
+        font-size: 2.75rem;
+    }
+
+    .home-highlights {
+        padding: 3rem 0;
+    }
+
+    .highlight-card {
+        border: 1px solid rgba(25, 135, 84, 0.15);
+        border-radius: 1rem;
+        height: 100%;
+        padding: 1.75rem;
+    }
+
+    .highlight-card i {
+        font-size: 2rem;
+        color: #198754;
+    }
+</style>
+
+<section class="container my-4">
+    <div class="home-hero text-center">
+        <div class="mb-3">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light p-3">
+                <i class="bi bi-heart-pulse-fill text-success hero-icon"></i>
+            </div>
+        </div>
+        <h1 class="fw-bold mb-3">Everything you need to stay on track</h1>
+        <p class="text-muted mb-4">
+            Log workouts, balance meals, and follow the goals that matter from one streamlined dashboard.
+        </p>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-success px-4">
+                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Register" class="btn btn-success px-4">
+                <i class="bi bi-person-plus me-2"></i>Create your free plan
+            </a>
+        }
+    </div>
+</section>
+
+<section class="home-highlights bg-white">
+    <div class="container">
+        <div class="row text-center mb-4">
+            <div class="col">
+                <h2 class="fw-semibold mb-2">Key tools, zero clutter</h2>
+                <p class="text-muted mb-0">Short, focused blocks keep the page light while highlighting the essentials.</p>
+            </div>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="highlight-card text-center">
+                    <i class="bi bi-activity mb-3 d-block"></i>
+                    <h5 class="fw-semibold mb-2">Activity logs</h5>
+                    <p class="text-muted small mb-0">Record workouts with quick forms and see weekly totals at a glance.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="highlight-card text-center">
+                    <i class="bi bi-apple mb-3 d-block"></i>
+                    <h5 class="fw-semibold mb-2">Nutrition balance</h5>
+                    <p class="text-muted small mb-0">Compare calories consumed vs. burned without scrolling through charts.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="highlight-card text-center">
+                    <i class="bi bi-bullseye mb-3 d-block"></i>
+                    <h5 class="fw-semibold mb-2">Goal snapshots</h5>
+                    <p class="text-muted small mb-0">Pin personal targets and watch progress bars update automatically.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (User.Identity?.IsAuthenticated != true)
+{
+    <section class="container pb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-4 px-3">
+                        <h3 class="fw-semibold mb-2">Start in under a minute</h3>
+                        <p class="text-muted mb-4">Create an account, add your first activity, and keep everything synced in one place.</p>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-success px-4">
+                            <i class="bi bi-person-plus me-2"></i>Join HealthFitness
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}

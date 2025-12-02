@@ -1,0 +1,82 @@
+@model HealthFitness.DTOs.NutritionDto
+@{
+    ViewData["Title"] = "Log Meal";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold mb-0">Log New Meal</h4>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-3">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+                    
+                    <div class="mb-2">
+                        <label asp-for="FoodName" class="form-label small fw-semibold"></label>
+                        <input asp-for="FoodName" class="form-control form-control-sm" placeholder="e.g., Grilled Chicken Breast" />
+                        <span asp-validation-for="FoodName" class="text-danger small"></span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label asp-for="Calories" class="form-label small fw-semibold"></label>
+                            <input asp-for="Calories" class="form-control form-control-sm" type="number" step="0.01" min="0" max="10000" />
+                            <span asp-validation-for="Calories" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6 mb-2">
+                            <label asp-for="MealType" class="form-label small fw-semibold"></label>
+                            <select asp-for="MealType" class="form-select form-select-sm">
+                                <option value="">Select Meal Type</option>
+                                <option value="Breakfast">Breakfast</option>
+                                <option value="Lunch">Lunch</option>
+                                <option value="Dinner">Dinner</option>
+                                <option value="Snack">Snack</option>
+                            </select>
+                            <span asp-validation-for="MealType" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <label asp-for="Time" class="form-label small fw-semibold">
+                            <i class="bi bi-clock me-1 text-success"></i>Time
+                        </label>
+                        <input asp-for="Time" class="form-control form-control-sm" type="time" value="@DateTime.Now.ToString("HH:mm")" />
+                        <span asp-validation-for="Time" class="text-danger small"></span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <label asp-for="Protein" class="form-label small fw-semibold"></label>
+                            <input asp-for="Protein" class="form-control form-control-sm" type="number" step="0.01" min="0" placeholder="Protein (g)" />
+                            <span asp-validation-for="Protein" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label asp-for="Carbs" class="form-label small fw-semibold"></label>
+                            <input asp-for="Carbs" class="form-control form-control-sm" type="number" step="0.01" min="0" placeholder="Carbs (g)" />
+                            <span asp-validation-for="Carbs" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label asp-for="Fat" class="form-label small fw-semibold"></label>
+                            <input asp-for="Fat" class="form-control form-control-sm" type="number" step="0.01" min="0" placeholder="Fat (g)" />
+                            <span asp-validation-for="Fat" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary btn-sm">Log Meal</button>
+                        <a asp-action="Index" class="btn btn-secondary btn-sm">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

@@ -1,0 +1,35 @@
+﻿# IDE and editor files
+.vs/
+.vscode/
+.idea/
+
+# Build outputs
+bin/
+obj/
+build/
+dist/
+*.log
+*.tmp
+*.temp
+
+# Runtime files
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets and configuration
+appsettings.Development.json
+*.env
+*.secret
+connectionstrings.config
+
+# Dependencies
+node_modules/
+packages/
+npm-debug.log
+yarn-error.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

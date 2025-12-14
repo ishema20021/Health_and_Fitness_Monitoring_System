@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: healthfitness-db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql/data
+    networks:
+      - healthfitness-network
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 60s
+
+  # Backend API
+  backend:
+    build:
+      context: ./HealthFitness.API
+      dockerfile: Dockerfile
+    container_name: healthfitness-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Server=database;Database=HealthFitness;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true
+      - Jwt__Secret=YourSuperSecretKeyForJWT_MustBeAtLeast32CharactersLong!
+      - Jwt__Issuer=HealthFitnessAPI
+      - Jwt__Audience=HealthFitnessReactApp
+      - Jwt__ExpirationHours=24
+      - Cors__AllowedOrigins__0=http://localhost:3000
+      - Cors__AllowedOrigins__1=http://localhost:80
+    ports:
+      - "5000:5000"
+    depends_on:
+      - database
+    networks:
+      - healthfitness-network
+    restart: unless-stopped
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./healthfitness-client
+      dockerfile: Dockerfile
+    container_name: healthfitness-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - healthfitness-network
+    restart: unless-stopped
+
+networks:
+  healthfitness-network:
+    driver: bridge
+
+volumes:
+  sqlserver-data:
